@@ -1,0 +1,621 @@
+esphome:
+  name: irrigation
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret irrigation_ssid
+  password: !secret irrigation_password
+
+  manual_ip:
+    static_ip: 192.168.2.61
+    gateway: 192.168.2.1
+    subnet: 255.255.255.0
+
+captive_portal:
+
+# Enable logging
+logger:
+
+ota:
+
+time:
+  - platform: homeassistant
+    id: hass_time
+
+globals:
+  - id: pump_duration
+    type: int
+    initial_value: "60"
+  - id: pump_remaining
+    type: int
+    initial_value: "0"
+  - id: zone_start_hours
+    type: int[6]
+    restore_value: yes
+    initial_value: "{20, 18, 20, 19, 18, 17}"
+  - id: zone_start_minutes
+    type: int[6]
+    restore_value: yes
+    initial_value: "{00, 00, 30, 30, 45, 15}"
+  - id: zone_durations
+    type: int[6]
+    restore_value: yes
+    initial_value: "{30, 45, 30, 30, 45, 45}"
+  - id: zone_remainings
+    type: int[6]
+    initial_value: "{0, 0, 0, 0, 0, 0}"
+    
+
+# Enable Home Assistant API
+api:
+  reboot_timeout: 0s
+  
+  services:
+    - service: activate_pump
+      variables:
+        duration: int
+      then:
+        - switch.turn_on: irrigation_pump
+        - delay: !lambda "return duration*1000;"
+        - script.execute: turn_off_pump_if_valves_are_closed
+
+    - service: set_zone_duration
+      variables:
+        zone: int
+        duration: int
+      then:
+        - switch.turn_on: write_led
+        - lambda: |-
+            id(zone_durations)[zone-1] = duration;
+
+            switch (zone) {
+              case 1: id(zone1_duration).update(); break;
+              case 2: id(zone2_duration).update(); break;
+              case 3: id(zone3_duration).update(); break;
+              case 4: id(zone4_duration).update(); break;
+              case 5: id(zone5_duration).update(); break;
+              case 6: id(zone6_duration).update(); break;
+              default: break;
+            }
+        - switch.turn_off: write_led
+        - logger.log:
+            format: "Duration set to zone %d: %02d."
+            args: [ zone, 'id(zone_durations)[zone-1]' ]
+
+
+    - service: set_zone_start
+      variables:
+        zone: int
+        start: string
+      then:
+        - switch.turn_on: write_led
+        - lambda: |-
+            int hours;
+            int minutes;
+            sscanf(start.c_str(), "%d:%d:%*s", &hours, &minutes);
+            id(zone_start_hours)[zone-1] = hours;
+            id(zone_start_minutes)[zone-1] = minutes;
+
+            switch (zone) {
+              case 1: id(zone1_start).update(); break;
+              case 2: id(zone2_start).update(); break;
+              case 3: id(zone3_start).update(); break;
+              case 4: id(zone4_start).update(); break;
+              case 5: id(zone5_start).update(); break;
+              case 6: id(zone6_start).update(); break;
+              default: break;
+            }
+        - switch.turn_off: write_led
+        - logger.log:
+            format: "Time set to zone %d: %02d:%02d."
+            args: [ zone, 'id(zone_start_hours)[zone-1]','id(zone_start_minutes)[zone-1]' ]
+
+
+binary_sensor:
+  # Connection status
+  - platform: status
+    name: "Irrigation Status"
+
+  # Manual switch sensor
+  - platform: gpio
+    id: manual_gpio
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLDOWN
+    on_press:
+      then:
+        - switch.toggle: irrigation_manual
+
+sensor:
+  - platform: wifi_signal
+    name: "Irrigation Wifi"
+    update_interval: 60s
+
+  #
+  # Template Sensors
+  #
+  - platform: template
+    id: zone1_duration
+    name: "Zone 1 duration"
+    lambda: "return id(zone_durations)[0];"
+  - platform: template
+    id: zone2_duration
+    name: "Zone 2 duration"
+    lambda: "return id(zone_durations)[1];"
+  - platform: template
+    id: zone3_duration
+    name: "Zone 3 duration"
+    lambda: "return id(zone_durations)[2];"
+  - platform: template
+    id: zone4_duration
+    name: "Zone 4 duration"
+    lambda: "return id(zone_durations)[3];"
+  - platform: template
+    id: zone5_duration
+    name: "Zone 5 duration"
+    lambda: "return id(zone_durations)[4];"
+  - platform: template
+    id: zone6_duration
+    name: "Zone 6 duration"
+    lambda: "return id(zone_durations)[5];"
+
+  - platform: template
+    id: manual_remaining
+    name: "Manual pump remaining"
+    lambda: "return id(pump_remaining);"
+  - platform: template
+    id: zone1_remaining
+    name: "Zone 1 remaining"
+    lambda: "return id(zone_remainings)[0];"
+  - platform: template
+    id: zone2_remaining
+    name: "Zone 2 remaining"
+    lambda: "return id(zone_remainings)[1];"
+  - platform: template
+    id: zone3_remaining
+    name: "Zone 3 remaining"
+    lambda: "return id(zone_remainings)[2];"
+  - platform: template
+    id: zone4_remaining
+    name: "Zone 4 remaining"
+    lambda: "return id(zone_remainings)[3];"
+  - platform: template
+    id: zone5_remaining
+    name: "Zone 5 remaining"
+    lambda: "return id(zone_remainings)[4];"
+  - platform: template
+    id: zone6_remaining
+    name: "Zone 6 remaining"
+    lambda: "return id(zone_remainings)[5];"
+
+
+text_sensor:
+  #
+  # Template Text Sensors
+  #
+  - platform: template
+    name: "Zone 1 start"
+    id: zone1_start
+    lambda: |-
+      char buf[9];
+      sprintf(buf, "%02d:%02d:00", id(zone_start_hours)[0], id(zone_start_minutes)[0]);
+      std::string bufstdstr = buf;
+      return bufstdstr;
+  - platform: template
+    name: "Zone 2 start"
+    id: zone2_start
+    lambda: |-
+      char buf[9];
+      sprintf(buf, "%02d:%02d:00", id(zone_start_hours)[1], id(zone_start_minutes)[1]);
+      std::string bufstdstr = buf;
+      return bufstdstr;
+  - platform: template
+    name: "Zone 3 start"
+    id: zone3_start
+    lambda: |-
+      char buf[9];
+      sprintf(buf, "%02d:%02d:00", id(zone_start_hours)[2], id(zone_start_minutes)[2]);
+      std::string bufstdstr = buf;
+      return bufstdstr;
+  - platform: template
+    name: "Zone 4 start"
+    id: zone4_start
+    lambda: |-
+      char buf[9];
+      sprintf(buf, "%02d:%02d:00", id(zone_start_hours)[3], id(zone_start_minutes)[3]);
+      std::string bufstdstr = buf;
+      return bufstdstr;
+  - platform: template
+    name: "Zone 5 start"
+    id: zone5_start
+    lambda: |-
+      char buf[9];
+      sprintf(buf, "%02d:%02d:00", id(zone_start_hours)[4], id(zone_start_minutes)[4]);
+      std::string bufstdstr = buf;
+      return bufstdstr;
+  - platform: template
+    name: "Zone 6 start"
+    id: zone6_start
+    lambda: |-
+      char buf[9];
+      sprintf(buf, "%02d:%02d:00", id(zone_start_hours)[5], id(zone_start_minutes)[5]);
+      std::string bufstdstr = buf;
+      return bufstdstr;
+
+
+switch:
+  #
+  # Template Switches
+  #
+  - platform: template
+    name: "Irrigation Manual"
+    id: irrigation_manual
+    lambda: "return id(irrigation_pump).state;"
+    turn_on_action:
+      - switch.turn_on: irrigation_pump
+      - script.execute: manual_pump_wait
+      - script.wait: manual_pump_wait
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: manual_pump_wait
+      - lambda: |-
+          id(pump_remaining) = 0;
+          id(manual_remaining).update();
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+  - platform: template
+    name: "Irrigation Zone 1"
+    id: irrigation_zone1
+    lambda: 'return id(irrigation_channel1).state;'
+    turn_on_action:
+      - switch.turn_on: irrigation_channel1
+      - switch.turn_on: irrigation_pump
+      - script.execute: zone1_wait
+      - script.wait: zone1_wait
+      - switch.turn_off: irrigation_channel1
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: zone1_wait
+      - lambda: |-
+          id(zone_remainings)[0] = 0;
+          id(zone1_remaining).update();
+      - switch.turn_off: irrigation_channel1
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+  - platform: template
+    name: "Irrigation Zone 2"
+    id: irrigation_zone2
+    lambda: 'return id(irrigation_channel2).state;'
+    turn_on_action:
+      - switch.turn_on: irrigation_channel2
+      - switch.turn_on: irrigation_pump
+      - script.execute: zone2_wait
+      - script.wait: zone2_wait
+      - switch.turn_off: irrigation_channel2
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: zone2_wait
+      - lambda: |-
+          id(zone_remainings)[1] = 0;
+          id(zone2_remaining).update();
+      - switch.turn_off: irrigation_channel2
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+  - platform: template
+    name: "Irrigation Zone 3"
+    id: irrigation_zone3
+    lambda: 'return id(irrigation_channel3).state;'
+    turn_on_action:
+      - switch.turn_on: irrigation_channel3
+      - switch.turn_on: irrigation_pump
+      - script.execute: zone3_wait
+      - script.wait: zone3_wait
+      - switch.turn_off: irrigation_channel3
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: zone3_wait
+      - lambda: |-
+          id(zone_remainings)[2] = 0;
+          id(zone3_remaining).update();
+      - switch.turn_off: irrigation_channel3
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+  - platform: template
+    name: "Irrigation Zone 4"
+    id: irrigation_zone4
+    lambda: 'return id(irrigation_channel4).state;'
+    turn_on_action:
+      - switch.turn_on: irrigation_channel4
+      - switch.turn_on: irrigation_pump
+      - script.execute: zone4_wait
+      - script.wait: zone4_wait
+      - switch.turn_off: irrigation_channel4
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: zone4_wait
+      - lambda: |-
+          id(zone_remainings)[3] = 0;
+          id(zone4_remaining).update();
+      - switch.turn_off: irrigation_channel4
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+  - platform: template
+    name: "Irrigation Zone 5"
+    id: irrigation_zone5
+    lambda: 'return id(irrigation_channel5).state;'
+    turn_on_action:
+      - switch.turn_on: irrigation_channel5
+      - switch.turn_on: irrigation_pump
+      - script.execute: zone5_wait
+      - script.wait: zone5_wait
+      - switch.turn_off: irrigation_channel5
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: zone5_wait
+      - lambda: |-
+          id(zone_remainings)[4] = 0;
+          id(zone5_remaining).update();
+      - switch.turn_off: irrigation_channel5
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+  - platform: template
+    name: "Irrigation Zone 6"
+    id: irrigation_zone6
+    lambda: 'return id(irrigation_channel6).state;'
+    turn_on_action:
+      - switch.turn_on: irrigation_channel6
+      - switch.turn_on: irrigation_pump
+      - script.execute: zone6_wait
+      - script.wait: zone6_wait
+      - switch.turn_off: irrigation_channel6
+      - script.execute: turn_off_pump_if_valves_are_closed
+    turn_off_action:
+      - script.stop: zone6_wait
+      - lambda: |-
+          id(zone_remainings)[5] = 0;
+          id(zone6_remaining).update();
+      - switch.turn_off: irrigation_channel6
+      - script.execute: turn_off_pump_if_valves_are_closed
+
+
+  - platform: template
+    name: "Zone 1 enabled"
+    id: zone1_enabled
+    optimistic: true
+    restore_state: yes
+  - platform: template
+    name: "Zone 2 enabled"
+    id: zone2_enabled
+    optimistic: true
+    restore_state: yes
+  - platform: template
+    name: "Zone 3 enabled"
+    id: zone3_enabled
+    optimistic: true
+    restore_state: yes
+  - platform: template
+    name: "Zone 4 enabled"
+    id: zone4_enabled
+    optimistic: true
+    restore_state: yes
+  - platform: template
+    name: "Zone 5 enabled"
+    id: zone5_enabled
+    optimistic: true
+    restore_state: yes
+  - platform: template
+    name: "Zone 6 enabled"
+    id: zone6_enabled
+    optimistic: true    
+    restore_state: yes
+
+  #
+  # GPIO Switches
+  #
+  - platform: gpio
+    name: "Irrigation Pump"
+    id: irrigation_pump
+    pin: GPIO12
+    inverted: true
+    restore_mode: ALWAYS_OFF
+  
+  - platform: gpio
+    id: irrigation_channel1
+    pin: GPIO32
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: irrigation_channel2
+    pin: GPIO33
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: irrigation_channel3
+    pin: GPIO25
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: irrigation_channel4
+    pin: GPIO26
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: irrigation_channel5
+    pin: GPIO27
+    inverted: true
+
+  - platform: gpio
+    id: irrigation_channel6
+    pin: GPIO14
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: write_led
+    pin: GPIO2
+    inverted: false
+    restore_mode: ALWAYS_OFF
+
+#
+# Scripts
+#
+script:
+  - id: turn_off_pump_if_valves_are_closed
+    then:
+      - if:
+          condition:
+            and:
+              - switch.is_off: irrigation_channel1
+              - switch.is_off: irrigation_channel2
+              - switch.is_off: irrigation_channel3
+              - switch.is_off: irrigation_channel4
+              - switch.is_off: irrigation_channel5
+              - switch.is_off: irrigation_channel6
+          then:
+            - if:
+                condition:
+                  not:
+                    script.is_running: manual_pump_wait
+                then:
+                  - switch.turn_off: irrigation_pump
+                  - script.stop: manual_pump_wait
+
+  - id: manual_pump_wait
+    then:
+      - lambda: |-
+          id(pump_remaining) = id(pump_duration);
+          id(manual_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(pump_remaining) > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(pump_remaining) -= 1;
+                id(manual_remaining).update();
+  - id: zone1_wait
+    then:
+      - lambda: |-
+          id(zone_remainings)[0] = id(zone_durations)[0];
+          id(zone1_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(zone_remainings)[0] > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(zone_remainings)[0] -= 1;
+                id(zone1_remaining).update();
+  - id: zone2_wait
+    then:
+      - lambda: |-
+          id(zone_remainings)[1] = id(zone_durations)[1];
+          id(zone2_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(zone_remainings)[1] > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(zone_remainings)[1] -= 1;
+                id(zone2_remaining).update();
+  - id: zone3_wait
+    then:
+      - lambda: |-
+          id(zone_remainings)[2] = id(zone_durations)[2];
+          id(zone3_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(zone_remainings)[2] > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(zone_remainings)[2] -= 1;
+                id(zone3_remaining).update();
+  - id: zone4_wait
+    then:
+      - lambda: |-
+          id(zone_remainings)[3] = id(zone_durations)[3];
+          id(zone4_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(zone_remainings)[3] > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(zone_remainings)[3] -= 1;
+                id(zone4_remaining).update();
+  - id: zone5_wait
+    then:
+      - lambda: |-
+          id(zone_remainings)[4] = id(zone_durations)[4];
+          id(zone5_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(zone_remainings)[4] > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(zone_remainings)[4] -= 1;
+                id(zone5_remaining).update();
+  - id: zone6_wait
+    then:
+      - lambda: |-
+          id(zone_remainings)[5] = id(zone_durations)[5];
+          id(zone6_remaining).update();
+      - while:
+          condition:
+            lambda: "return id(zone_remainings)[5] > 0;"
+          then:
+            - delay: 1min
+            - lambda: |-
+                id(zone_remainings)[5] -= 1;
+                id(zone6_remaining).update();
+
+#
+# Time automations
+#
+interval:
+  - interval: 1sec
+    then:
+      - lambda: |-
+          if (id(zone1_enabled).state &&
+            !id(irrigation_zone1).state &&
+            id(hass_time).now().hour == id(zone_start_hours)[0] &&
+            id(hass_time).now().minute == id(zone_start_minutes)[0])
+              id(irrigation_zone1).turn_on();
+          if (id(zone2_enabled).state &&
+            !id(irrigation_zone2).state &&
+            id(hass_time).now().hour == id(zone_start_hours)[1] &&
+            id(hass_time).now().minute == id(zone_start_minutes)[1])
+              id(irrigation_zone2).turn_on();
+          if (id(zone3_enabled).state &&
+            !id(irrigation_zone3).state &&
+            id(hass_time).now().hour == id(zone_start_hours)[2] &&
+            id(hass_time).now().minute == id(zone_start_minutes)[2])
+              id(irrigation_zone3).turn_on();
+          if (id(zone4_enabled).state &&
+            !id(irrigation_zone4).state &&
+            id(hass_time).now().hour == id(zone_start_hours)[3] &&
+            id(hass_time).now().minute == id(zone_start_minutes)[3])
+              id(irrigation_zone4).turn_on();
+          if (id(zone5_enabled).state &&
+            !id(irrigation_zone5).state &&
+            id(hass_time).now().hour == id(zone_start_hours)[4] &&
+            id(hass_time).now().minute == id(zone_start_minutes)[4])
+              id(irrigation_zone5).turn_on();
+          if (id(zone6_enabled).state &&
+            !id(irrigation_zone6).state &&
+            id(hass_time).now().hour == id(zone_start_hours)[5] &&
+            id(hass_time).now().minute == id(zone_start_minutes)[5])
+              id(irrigation_zone6).turn_on();
+  # - interval: 5sec
+  #   then:
+  #     - logger.log:
+  #         format: "Time: %02d:%02d:%02d"
+  #         args: ["id(hass_time).now().hour", "id(hass_time).now().minute", "id(hass_time).now().second"]

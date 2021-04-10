@@ -1,0 +1,136 @@
+title: Irrigation
+views:
+  - path: default_view
+    title: Home
+    cards:
+      - type: entities
+        entities:
+          - sun.sun
+        title: Sonne
+      - type: weather-forecast
+        entity: weather.home
+        show_forecast: false
+      - type: entities
+        title: Run Zones
+        entities:
+          - entity: switch.irrigation_manual
+            type: "custom:multiple-entity-row"
+            name: Pump
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.manual_pump_remaining
+                name: remaining
+          - entity: switch.irrigation_zone_1
+            type: "custom:multiple-entity-row"
+            name: Run Zone 1
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.zone_1_remaining
+                name: remaining
+          - entity: switch.irrigation_zone_2
+            type: "custom:multiple-entity-row"
+            name: Run Zone 2
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.zone_2_remaining
+                name: remaining
+          - entity: switch.irrigation_zone_3
+            type: "custom:multiple-entity-row"
+            name: Run Zone 3
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.zone_3_remaining
+                name: remaining
+          - entity: switch.irrigation_zone_4
+            type: "custom:multiple-entity-row"
+            name: Run Zone 4
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.zone_4_remaining
+                name: remaining
+          - entity: switch.irrigation_zone_5
+            type: "custom:multiple-entity-row"
+            name: Run Zone 5
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.zone_5_remaining
+                name: remaining
+          - entity: switch.irrigation_zone_6
+            type: "custom:multiple-entity-row"
+            name: Run Zone 6
+            toggle: true
+            state_color: true
+            entities:
+              - entity: sensor.zone_6_remaining
+                name: remaining
+      - type: entities
+        title: Zone Programming
+        entities:
+          - entity: switch.zone_1_enabled
+            type: "custom:multiple-entity-row"
+            name: Enable zone 1 automation
+            toggle: true
+            state_color: true
+            entities:
+              - entity: input_datetime.zone1_start
+                name: start
+              - entity: input_number.zone1_duration
+                name: duration
+          - entity: switch.zone_2_enabled
+            type: "custom:multiple-entity-row"
+            name: Enable zone 2 automation
+            toggle: true
+            state_color: true
+            entities:
+              - entity: input_datetime.zone2_start
+                name: start
+              - entity: input_number.zone2_duration
+                name: duration
+          - entity: switch.zone_3_enabled
+            type: "custom:multiple-entity-row"
+            name: Enable zone 3 automation
+            toggle: true
+            state_color: true
+            entities:
+              - entity: input_datetime.zone3_start
+                name: start
+              - entity: input_number.zone3_duration
+                name: duration
+          - entity: switch.zone_4_enabled
+            type: "custom:multiple-entity-row"
+            name: Enable zone 4 automation
+            toggle: true
+            state_color: true
+            entities:
+              - entity: input_datetime.zone4_start
+                name: start
+              - entity: input_number.zone4_duration
+                name: duration
+          - entity: switch.zone_5_enabled
+            type: "custom:multiple-entity-row"
+            name: Enable zone 5 automation
+            toggle: true
+            state_color: true
+            entities:
+              - entity: input_datetime.zone5_start
+                name: start
+              - entity: input_number.zone5_duration
+                name: duration
+          - entity: switch.zone_6_enabled
+            type: "custom:multiple-entity-row"
+            name: Enable zone 6 automation
+            toggle: true
+            state_color: true
+            entities:
+              - entity: input_datetime.zone6_start
+                name: start
+              - entity: input_number.zone6_duration
+                name: duration
+      - type: entity
+        entity: sensor.time

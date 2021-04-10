@@ -1,0 +1,72 @@
+sensor:
+  - platform: time_date
+    display_options:
+      - "time"
+
+input_number:
+  zone1_duration:
+    name: Zone 1 duration
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: min
+
+  zone2_duration:
+    name: Zone 2 duration
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: min
+
+  zone3_duration:
+    name: Zone 3 duration
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: min
+
+  zone4_duration:
+    name: Zone 4 duration
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: min
+
+  zone5_duration:
+    name: Zone 5 duration
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: min
+
+  zone6_duration:
+    name: Zone 6 duration
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: min
+
+input_datetime:
+  zone1_start:
+    name: Zone 1 start
+    has_time: true
+
+  zone2_start:
+    name: Zone 2 start
+    has_time: true
+
+  zone3_start:
+    name: Zone 3 start
+    has_time: true
+
+  zone4_start:
+    name: Zone 4 start
+    has_time: true
+
+  zone5_start:
+    name: Zone 5 start
+    has_time: true
+
+  zone6_start:
+    name: Zone 6 start
+    has_time: true
