@@ -72,6 +72,8 @@ views:
       - type: entities
         title: Zone Programming
         entities:
+          - entity: input_number.irrigation_time_multiplier
+            name: Irrigation time
           - entity: switch.zone_1_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 1 automation

@@ -4,6 +4,13 @@ sensor:
       - "time"
 
 input_number:
+  irrigation_time_multiplier:
+    name: Time multiplier
+    mode: box
+    min: 0
+    max: 120
+    unit_of_measurement: "%"
+
   zone1_duration:
     name: Zone 1 duration
     mode: box

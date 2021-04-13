@@ -45,20 +45,24 @@ globals:
   - id: zone_remainings
     type: int[6]
     initial_value: "{0, 0, 0, 0, 0, 0}"
-    
+  - id: time_multiplier
+    type: int
+    initial_value: "100"
 
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
   
   services:
-    - service: activate_pump
+    - service: set_irrigation_time
       variables:
-        duration: int
+        percentage: int
       then:
-        - switch.turn_on: irrigation_pump
-        - delay: !lambda "return duration*1000;"
-        - script.execute: turn_off_pump_if_valves_are_closed
+        - lambda: |-
+            id(time_multiplier) = percentage;
+        - logger.log:
+            format: "Irrigation time set to %d percent."
+            args: [ percentage ]
 
     - service: set_zone_duration
       variables:
@@ -80,9 +84,8 @@ api:
             }
         - switch.turn_off: write_led
         - logger.log:
-            format: "Duration set to zone %d: %02d."
-            args: [ zone, 'id(zone_durations)[zone-1]' ]
-
+            format: "Duration set to zone %d: %d."
+            args: [ zone, duration ]
 
     - service: set_zone_start
       variables:
@@ -189,6 +192,10 @@ sensor:
     name: "Zone 6 remaining"
     lambda: "return id(zone_remainings)[5];"
 
+  - platform: template
+    id: irrigation_time
+    name: "Irrigation time"
+    lambda: "return id(time_multiplier);"
 
 text_sensor:
   #
@@ -501,7 +508,7 @@ script:
   - id: zone1_wait
     then:
       - lambda: |-
-          id(zone_remainings)[0] = id(zone_durations)[0];
+          id(zone_remainings)[0] = id(zone_durations)[0]  * id(time_multiplier) / 100;
           id(zone1_remaining).update();
       - while:
           condition:
@@ -514,7 +521,7 @@ script:
   - id: zone2_wait
     then:
       - lambda: |-
-          id(zone_remainings)[1] = id(zone_durations)[1];
+          id(zone_remainings)[1] = id(zone_durations)[1]  * id(time_multiplier) / 100;
           id(zone2_remaining).update();
       - while:
           condition:
@@ -527,7 +534,7 @@ script:
   - id: zone3_wait
     then:
       - lambda: |-
-          id(zone_remainings)[2] = id(zone_durations)[2];
+          id(zone_remainings)[2] = id(zone_durations)[2]  * id(time_multiplier) / 100;
           id(zone3_remaining).update();
       - while:
           condition:
@@ -540,7 +547,7 @@ script:
   - id: zone4_wait
     then:
       - lambda: |-
-          id(zone_remainings)[3] = id(zone_durations)[3];
+          id(zone_remainings)[3] = id(zone_durations)[3]  * id(time_multiplier) / 100;
           id(zone4_remaining).update();
       - while:
           condition:
@@ -553,7 +560,7 @@ script:
   - id: zone5_wait
     then:
       - lambda: |-
-          id(zone_remainings)[4] = id(zone_durations)[4];
+          id(zone_remainings)[4] = id(zone_durations)[4]  * id(time_multiplier) / 100;
           id(zone5_remaining).update();
       - while:
           condition:
@@ -566,7 +573,7 @@ script:
   - id: zone6_wait
     then:
       - lambda: |-
-          id(zone_remainings)[5] = id(zone_durations)[5];
+          id(zone_remainings)[5] = id(zone_durations)[5]  * id(time_multiplier) / 100;
           id(zone6_remaining).update();
       - while:
           condition:

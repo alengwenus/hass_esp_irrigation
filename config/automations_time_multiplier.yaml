@@ -1,0 +1,23 @@
+automation time_multiplier:
+  - alias: "Irrigation multiplier changed"
+    trigger:
+      platform: state
+      entity_id: input_number.irrigation_time_multiplier
+    action:
+      service: esphome.irrigation_set_irrigation_time
+      data:
+        percentage: "{{ states('input_number.irrigation_time_multiplier') | int }}"
+
+  - alias: "Irrigation time sensor changed"
+    trigger:
+      platform: state
+      entity_id: sensor.irrigation_time
+    action:
+      - service: automation.turn_off
+        entity_id: automation.irrigation_multiplier_changed
+      - service: input_number.set_value
+        entity_id: input_number.irrigation_time_multiplier
+        data_template:
+          value: "{{ states('sensor.irrigation_time') }}"
+      - service: automation.turn_on
+        entity_id: automation.irrigation_multiplier_changed
