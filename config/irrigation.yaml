@@ -11,6 +11,13 @@ input_number:
     max: 120
     unit_of_measurement: "%"
 
+  irrigation_skip_days:
+    name: Skip days
+    mode: box
+    min: 0
+    max: 100
+    unit_of_measurement: days
+
   zone1_duration:
     name: Zone 1 duration
     mode: box

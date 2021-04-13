@@ -4,13 +4,6 @@ views:
     title: Home
     cards:
       - type: entities
-        entities:
-          - sun.sun
-        title: Sonne
-      - type: weather-forecast
-        entity: weather.home
-        show_forecast: false
-      - type: entities
         title: Run Zones
         entities:
           - entity: switch.irrigation_manual
@@ -74,6 +67,8 @@ views:
         entities:
           - entity: input_number.irrigation_time_multiplier
             name: Irrigation time
+          - entity: input_number.irrigation_skip_days
+            name: Skip days
           - entity: switch.zone_1_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 1 automation
@@ -134,5 +129,8 @@ views:
                 name: start
               - entity: input_number.zone6_duration
                 name: duration
+      - type: weather-forecast
+        entity: weather.home
+        show_forecast: false
       - type: entity
         entity: sensor.time
