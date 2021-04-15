@@ -18,6 +18,6 @@ automation skip_days:
       - service: input_number.set_value
         entity_id: input_number.irrigation_skip_days
         data_template:
-          value: "{{ states('sensor.skip_days') }}"
+          value: "{{ states('sensor.skip_days') | int }}"
       - service: automation.turn_on
         entity_id: automation.irrigation_skip_days_changed

@@ -18,6 +18,6 @@ automation time_multiplier:
       - service: input_number.set_value
         entity_id: input_number.irrigation_time_multiplier
         data_template:
-          value: "{{ states('sensor.irrigation_time') }}"
+          value: "{{ states('sensor.irrigation_time') | int }}"
       - service: automation.turn_on
         entity_id: automation.irrigation_multiplier_changed

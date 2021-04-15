@@ -4,8 +4,8 @@ esphome:
   board: esp32dev
 
 wifi:
-  ssid: !secret irrigation_ssid
-  password: !secret irrigation_password
+  ssid: !secret wlan_ssid
+  password: !secret wlan_password
 
   manual_ip:
     static_ip: 192.168.2.61
@@ -160,55 +160,81 @@ sensor:
   - platform: template
     id: zone1_duration
     name: "Zone 1 duration"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_durations)[0];"
   - platform: template
     id: zone2_duration
     name: "Zone 2 duration"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_durations)[1];"
   - platform: template
     id: zone3_duration
     name: "Zone 3 duration"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_durations)[2];"
   - platform: template
     id: zone4_duration
     name: "Zone 4 duration"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_durations)[3];"
   - platform: template
     id: zone5_duration
     name: "Zone 5 duration"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_durations)[4];"
   - platform: template
     id: zone6_duration
     name: "Zone 6 duration"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_durations)[5];"
 
   - platform: template
     id: manual_remaining
     name: "Manual pump remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_pump_remaining);"
   - platform: template
     id: zone1_remaining
     name: "Zone 1 remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[0];"
   - platform: template
     id: zone2_remaining
     name: "Zone 2 remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[1];"
   - platform: template
     id: zone3_remaining
     name: "Zone 3 remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[2];"
   - platform: template
     id: zone4_remaining
     name: "Zone 4 remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[3];"
   - platform: template
     id: zone5_remaining
     name: "Zone 5 remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[4];"
   - platform: template
     id: zone6_remaining
     name: "Zone 6 remaining"
+    accuracy_decimals: 0
+    unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[5];"
 
   - platform: template
