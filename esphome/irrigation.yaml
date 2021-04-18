@@ -145,9 +145,20 @@ binary_sensor:
     pin:
       number: GPIO13
       mode: INPUT_PULLDOWN
-    on_press:
-      then:
-        - switch.toggle: irrigation_manual
+    on_click:
+      - max_length: 2s
+        then:
+          - switch.toggle: irrigation_manual
+      - min_length: 2s
+        max_length: 5s
+        then:
+          - switch.turn_off: automation_enabled
+          - script.execute: turn_off_valves_and_pump
+      - min_length: 5s
+        max_length: 10s
+        then:
+          - switch.turn_on: automation_enabled
+    
 
 sensor:
   - platform: wifi_signal
@@ -467,6 +478,12 @@ switch:
     optimistic: true    
     restore_state: yes
 
+  - platform: template
+    name: "Automation enabled"
+    id: automation_enabled
+    optimistic: true
+    restore_state: yes
+
   #
   # GPIO Switches
   #
@@ -478,36 +495,36 @@ switch:
     restore_mode: ALWAYS_OFF
   
   - platform: gpio
-    id: irrigation_channel1
+    id: irrigation_channel6
     pin: GPIO32
     inverted: true
     restore_mode: ALWAYS_OFF
 
   - platform: gpio
-    id: irrigation_channel2
+    id: irrigation_channel5
     pin: GPIO33
     inverted: true
     restore_mode: ALWAYS_OFF
 
   - platform: gpio
-    id: irrigation_channel3
+    id: irrigation_channel4
     pin: GPIO25
     inverted: true
     restore_mode: ALWAYS_OFF
 
   - platform: gpio
-    id: irrigation_channel4
+    id: irrigation_channel3
     pin: GPIO26
     inverted: true
     restore_mode: ALWAYS_OFF
 
   - platform: gpio
-    id: irrigation_channel5
+    id: irrigation_channel2
     pin: GPIO27
     inverted: true
 
   - platform: gpio
-    id: irrigation_channel6
+    id: irrigation_channel1
     pin: GPIO14
     inverted: true
     restore_mode: ALWAYS_OFF
@@ -541,6 +558,16 @@ script:
                 then:
                   - switch.turn_off: irrigation_pump
                   - script.stop: manual_pump_wait
+
+  - id: turn_off_valves_and_pump
+    then:
+      - switch.turn_off: irrigation_manual
+      - switch.turn_off: irrigation_zone1
+      - switch.turn_off: irrigation_zone2
+      - switch.turn_off: irrigation_zone3
+      - switch.turn_off: irrigation_zone4
+      - switch.turn_off: irrigation_zone5
+      - switch.turn_off: irrigation_zone6
 
   - id: manual_pump_wait
     then:
@@ -641,9 +668,14 @@ interval:
   - interval: 1sec
     then:
       - lambda: |-
+          // automation overall switch
+          if (!id(automation_enabled).state) return;
+          
+          // skip days
           int current_day = id(hass_time).now().timestamp / 86400;
           if ((current_day - id(var_skip_start_day)) % (id(var_skip_days) + 1) != 0) return;
 
+          // time based
           if (id(zone1_enabled).state &&
             !id(irrigation_zone1).state &&
             id(hass_time).now().hour == id(var_zone_start_hours)[0] &&
@@ -674,8 +706,4 @@ interval:
             id(hass_time).now().hour == id(var_zone_start_hours)[5] &&
             id(hass_time).now().minute == id(var_zone_start_minutes)[5])
               id(irrigation_zone6).turn_on();
-  # - interval: 5sec
-  #   then:
-  #     - logger.log:
-  #         format: "Time: %02d:%02d:%02d"
-  #         args: ["id(hass_time).now().hour", "id(hass_time).now().minute", "id(hass_time).now().second"]
+

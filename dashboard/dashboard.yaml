@@ -5,6 +5,7 @@ views:
     cards:
       - type: entities
         title: Run Zones
+        show_header_toggle: false
         entities:
           - entity: switch.irrigation_manual
             type: "custom:multiple-entity-row"
@@ -64,7 +65,9 @@ views:
                 name: remaining
       - type: entities
         title: Zone Programming
+        show_header_toggle: false
         entities:
+          - entity: switch.automation_enabled
           - entity: input_number.irrigation_time_multiplier
             name: Irrigation time
           - entity: input_number.irrigation_skip_days
