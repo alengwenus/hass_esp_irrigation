@@ -4,8 +4,8 @@ esphome:
   board: esp32dev
 
 wifi:
-  ssid: !secret wlan_ssid
-  password: !secret wlan_password
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
 
   manual_ip:
     static_ip: 192.168.2.61
@@ -60,58 +60,13 @@ globals:
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
-  
+
   services:
-    - service: set_irrigation_time
-      variables:
-        percentage: int
-      then:
-        - lambda: |-
-            id(var_time_multiplier) = percentage;
-        - logger.log:
-            format: "Irrigation time set to %d percent."
-            args: [ percentage ]
-    
-    - service: set_skip_days
-      variables:
-        days: int
-      then:
-        - lambda: |-
-            id(var_skip_days) = days;
-            id(var_skip_start_day) = id(hass_time).now().timestamp / 86400;
-        - logger.log:
-            format: "Skip days set to %d."
-            args: [ days ]
-
-    - service: set_zone_duration
-      variables:
-        zone: int
-        duration: int
-      then:
-        - switch.turn_on: write_led
-        - lambda: |-
-            id(var_zone_durations)[zone-1] = duration;
-
-            switch (zone) {
-              case 1: id(zone1_duration).update(); break;
-              case 2: id(zone2_duration).update(); break;
-              case 3: id(zone3_duration).update(); break;
-              case 4: id(zone4_duration).update(); break;
-              case 5: id(zone5_duration).update(); break;
-              case 6: id(zone6_duration).update(); break;
-              default: break;
-            }
-        - switch.turn_off: write_led
-        - logger.log:
-            format: "Duration set to zone %d: %d."
-            args: [ zone, duration ]
-
     - service: set_zone_start
       variables:
         zone: int
         start: string
       then:
-        - switch.turn_on: write_led
         - lambda: |-
             int hours;
             int minutes;
@@ -128,7 +83,6 @@ api:
               case 6: id(zone6_start).update(); break;
               default: break;
             }
-        - switch.turn_off: write_led
         - logger.log:
             format: "Time set to zone %d: %02d:%02d."
             args: [ zone, 'id(var_zone_start_hours)[zone-1]','id(var_zone_start_minutes)[zone-1]' ]
@@ -158,7 +112,138 @@ binary_sensor:
         max_length: 10s
         then:
           - switch.turn_on: automation_enabled
-    
+
+
+number:
+  - platform: template
+    id: zone1_duration
+    name: "Zone 1 duration"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: min
+    lambda: "return id(var_zone_durations)[0];"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_zone_durations)[0] = x;
+            id(zone1_duration).update();
+        - logger.log:
+            format: "Duration set to zone 1: %f."
+            args: [ x ]
+  - platform: template
+    id: zone2_duration
+    name: "Zone 2 duration"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: min
+    lambda: "return id(var_zone_durations)[1];"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_zone_durations)[1] = x;
+            id(zone2_duration).update();
+        - logger.log:
+            format: "Duration set to zone 2: %f."
+            args: [ x ]
+  - platform: template
+    id: zone3_duration
+    name: "Zone 3 duration"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: min
+    lambda: "return id(var_zone_durations)[2];"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_zone_durations)[2] = x;
+            id(zone3_duration).update();
+        - logger.log:
+            format: "Duration set to zone 3: %f."
+            args: [ x ]
+  - platform: template
+    id: zone4_duration
+    name: "Zone 4 duration"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: min
+    lambda: "return id(var_zone_durations)[3];"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_zone_durations)[3] = x;
+            id(zone4_duration).update();
+        - logger.log:
+            format: "Duration set to zone 4: %f."
+            args: [ x ]
+  - platform: template
+    id: zone5_duration
+    name: "Zone 5 duration"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: min
+    lambda: "return id(var_zone_durations)[4];"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_zone_durations)[4] = x;
+            id(zone5_duration).update();
+        - logger.log:
+            format: "Duration set to zone 5: %f."
+            args: [ x ]
+  - platform: template
+    id: zone6_duration
+    name: "Zone 6 duration"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: min
+    lambda: "return id(var_zone_durations)[5];"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_zone_durations)[5] = x;
+            id(zone6_duration).update();
+        - logger.log:
+            format: "Duration set to zone 6: %f."
+            args: [ x ]
+
+  - platform: template
+    id: time_multiplier
+    name: "Time Multiplier"
+    step: 1
+    min_value: 0
+    max_value: 120
+    unit_of_measurement: "%"
+    lambda: "return id(var_time_multiplier);"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_time_multiplier) = x;
+        - logger.log:
+            format: "Irrigation time set to %f percent."
+            args: [ x ]
+
+  - platform: template
+    id: skip_days
+    name: "Skip Days"
+    step: 1
+    min_value: 0
+    max_value: 10
+    lambda: "return id(var_skip_days);"
+    set_action:
+      then:
+        - lambda: |-
+            id(var_skip_days) = x;
+            id(var_skip_start_day) = id(hass_time).now().timestamp / 86400;
+        - logger.log:
+            format: "Skip days set to %f."
+            args: [ x ]
+
 
 sensor:
   - platform: wifi_signal
@@ -168,43 +253,6 @@ sensor:
   #
   # Template Sensors
   #
-  - platform: template
-    id: zone1_duration
-    name: "Zone 1 duration"
-    accuracy_decimals: 0
-    unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[0];"
-  - platform: template
-    id: zone2_duration
-    name: "Zone 2 duration"
-    accuracy_decimals: 0
-    unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[1];"
-  - platform: template
-    id: zone3_duration
-    name: "Zone 3 duration"
-    accuracy_decimals: 0
-    unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[2];"
-  - platform: template
-    id: zone4_duration
-    name: "Zone 4 duration"
-    accuracy_decimals: 0
-    unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[3];"
-  - platform: template
-    id: zone5_duration
-    name: "Zone 5 duration"
-    accuracy_decimals: 0
-    unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[4];"
-  - platform: template
-    id: zone6_duration
-    name: "Zone 6 duration"
-    accuracy_decimals: 0
-    unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[5];"
-
   - platform: template
     id: manual_remaining
     name: "Manual pump remaining"
@@ -248,14 +296,6 @@ sensor:
     unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[5];"
 
-  - platform: template
-    id: irrigation_time
-    name: "Irrigation time"
-    lambda: "return id(var_time_multiplier);"
-  - platform: template
-    id: skip_days
-    name: "Skip days"
-    lambda: "return id(var_skip_days);"
 
 
 text_sensor:
@@ -475,7 +515,7 @@ switch:
   - platform: template
     name: "Zone 6 enabled"
     id: zone6_enabled
-    optimistic: true    
+    optimistic: true
     restore_state: yes
 
   - platform: template
@@ -493,7 +533,7 @@ switch:
     pin: GPIO12
     inverted: true
     restore_mode: ALWAYS_OFF
-  
+
   - platform: gpio
     id: irrigation_channel6
     pin: GPIO32
@@ -529,11 +569,6 @@ switch:
     inverted: true
     restore_mode: ALWAYS_OFF
 
-  - platform: gpio
-    id: write_led
-    pin: GPIO2
-    inverted: false
-    restore_mode: ALWAYS_OFF
 
 #
 # Scripts
@@ -670,7 +705,7 @@ interval:
       - lambda: |-
           // automation overall switch
           if (!id(automation_enabled).state) return;
-          
+
           // skip days
           int current_day = id(hass_time).now().timestamp / 86400;
           if ((current_day - id(var_skip_start_day)) % (id(var_skip_days) + 1) != 0) return;
@@ -706,4 +741,3 @@ interval:
             id(hass_time).now().hour == id(var_zone_start_hours)[5] &&
             id(hass_time).now().minute == id(var_zone_start_minutes)[5])
               id(irrigation_zone6).turn_on();
-

@@ -1,6 +1,7 @@
 automation zone1:
   # Inputs changed
   - alias: "Zone 1 start input changed"
+    id: zone1_start_input_changed
     trigger:
       platform: state
       entity_id: input_datetime.zone1_start
@@ -10,21 +11,15 @@ automation zone1:
         zone: 1
         start: "{{ states('input_datetime.zone1_start') }}"
 
-  - alias: "Zone 1 duration input changed"
-    trigger:
-      platform: state
-      entity_id: input_number.zone1_duration
-    action:
-      service: esphome.irrigation_set_zone_duration
-      data:
-        zone: 1
-        duration: "{{ states('input_number.zone1_duration') | int }}"
-
   # ESP Sensors changed
   - alias: "Zone 1 start sensor changed"
+    id: zone1_start_sensor_changed
     trigger:
       platform: state
       entity_id: sensor.zone_1_start
+    condition:
+      condition: not
+      conditions: "{{ is_state('sensor.zone_1_start', 'unavailable') }}"
     action:
       - service: automation.turn_off
         entity_id: automation.zone_1_start_input_changed
@@ -34,17 +29,3 @@ automation zone1:
           time: "{{ states('sensor.zone_1_start') }}"
       - service: automation.turn_on
         entity_id: automation.zone_1_start_input_changed
-
-  - alias: "Zone 1 duration sensor changed"
-    trigger:
-      platform: state
-      entity_id: sensor.zone_1_duration
-    action:
-      - service: automation.turn_off
-        entity_id: automation.zone_1_duration_input_changed
-      - service: input_number.set_value
-        entity_id: input_number.zone1_duration
-        data_template:
-          value: "{{ states('sensor.zone_1_duration') | int }}"
-      - service: automation.turn_on
-        entity_id: automation.zone_1_duration_input_changed

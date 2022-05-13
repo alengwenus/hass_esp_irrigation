@@ -5,7 +5,6 @@ views:
     cards:
       - type: entities
         title: Run Zones
-        show_header_toggle: false
         entities:
           - entity: switch.irrigation_manual
             type: "custom:multiple-entity-row"
@@ -65,12 +64,10 @@ views:
                 name: remaining
       - type: entities
         title: Zone Programming
-        show_header_toggle: false
         entities:
-          - entity: switch.automation_enabled
-          - entity: input_number.irrigation_time_multiplier
-            name: Irrigation time
-          - entity: input_number.irrigation_skip_days
+          - entity: number.time_multiplier
+            name: Time multiplier
+          - entity: number.skip_days
             name: Skip days
           - entity: switch.zone_1_enabled
             type: "custom:multiple-entity-row"
@@ -80,9 +77,8 @@ views:
             entities:
               - entity: input_datetime.zone1_start
                 name: start
-              - entity: input_number.zone1_duration
+              - entity: number.zone_1_duration
                 name: duration
-                format: precision0
           - entity: switch.zone_2_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 2 automation
@@ -91,9 +87,8 @@ views:
             entities:
               - entity: input_datetime.zone2_start
                 name: start
-              - entity: input_number.zone2_duration
+              - entity: number.zone_2_duration
                 name: duration
-                format: precision0
           - entity: switch.zone_3_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 3 automation
@@ -102,9 +97,8 @@ views:
             entities:
               - entity: input_datetime.zone3_start
                 name: start
-              - entity: input_number.zone3_duration
+              - entity: number.zone_3_duration
                 name: duration
-                format: precision0
           - entity: switch.zone_4_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 4 automation
@@ -113,9 +107,8 @@ views:
             entities:
               - entity: input_datetime.zone4_start
                 name: start
-              - entity: input_number.zone4_duration
+              - entity: number.zone_4_duration
                 name: duration
-                format: precision0
           - entity: switch.zone_5_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 5 automation
@@ -124,9 +117,8 @@ views:
             entities:
               - entity: input_datetime.zone5_start
                 name: start
-              - entity: input_number.zone5_duration
+              - entity: number.zone_5_duration
                 name: duration
-                format: precision0
           - entity: switch.zone_6_enabled
             type: "custom:multiple-entity-row"
             name: Enable zone 6 automation
@@ -135,13 +127,8 @@ views:
             entities:
               - entity: input_datetime.zone6_start
                 name: start
-              - entity: input_number.zone6_duration
+              - entity: number.zone_6_duration
                 name: duration
-                format: precision0
-      - type: entities
-        entities:
-          - entity: binary_sensor.irrigation_status
-          - entity: sensor.irrigation_wifi
       - type: weather-forecast
         entity: weather.home
         show_forecast: false
