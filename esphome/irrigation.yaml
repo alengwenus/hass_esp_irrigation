@@ -1,7 +1,11 @@
 esphome:
   name: irrigation
-  platform: ESP32
+
+esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
+    version: recommended
 
 wifi:
   ssid: !secret wifi_ssid
@@ -11,8 +15,6 @@ wifi:
     static_ip: 192.168.2.61
     gateway: 192.168.2.1
     subnet: 255.255.255.0
-
-captive_portal:
 
 # Enable logging
 logger:
@@ -30,14 +32,6 @@ globals:
   - id: var_pump_remaining
     type: int
     initial_value: "0"
-  - id: var_zone_start_hours
-    type: int[6]
-    restore_value: yes
-    initial_value: "{20, 18, 20, 19, 18, 17}"
-  - id: var_zone_start_minutes
-    type: int[6]
-    restore_value: yes
-    initial_value: "{00, 00, 30, 30, 45, 15}"
   - id: var_zone_durations
     type: int[6]
     restore_value: yes
@@ -60,32 +54,6 @@ globals:
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
-
-  services:
-    - service: set_zone_start
-      variables:
-        zone: int
-        start: string
-      then:
-        - lambda: |-
-            int hours;
-            int minutes;
-            sscanf(start.c_str(), "%d:%d:%*s", &hours, &minutes);
-            id(var_zone_start_hours)[zone-1] = hours;
-            id(var_zone_start_minutes)[zone-1] = minutes;
-
-            switch (zone) {
-              case 1: id(zone1_start).update(); break;
-              case 2: id(zone2_start).update(); break;
-              case 3: id(zone3_start).update(); break;
-              case 4: id(zone4_start).update(); break;
-              case 5: id(zone5_start).update(); break;
-              case 6: id(zone6_start).update(); break;
-              default: break;
-            }
-        - logger.log:
-            format: "Time set to zone %d: %02d:%02d."
-            args: [ zone, 'id(var_zone_start_hours)[zone-1]','id(var_zone_start_minutes)[zone-1]' ]
 
 
 binary_sensor:
@@ -112,6 +80,76 @@ binary_sensor:
         max_length: 10s
         then:
           - switch.turn_on: automation_enabled
+
+
+select:
+  - platform: template
+    name: "Zone 1 start"
+    id: zone1_start
+    options: &start_options
+      ["00:00", "00:15", "00:30", "00:45",
+       "01:00", "01:15", "01:30", "01:45",
+       "02:00", "02:15", "02:30", "02:45",
+       "03:00", "03:15", "03:30", "03:45",
+       "04:00", "04:15", "04:30", "04:45",
+       "05:00", "05:15", "05:30", "05:45",
+       "06:00", "06:15", "06:30", "06:45",
+       "07:00", "07:15", "07:30", "07:45",
+       "08:00", "08:15", "08:30", "08:45",
+       "09:00", "09:15", "09:30", "09:45",
+       "10:00", "10:15", "10:30", "10:45",
+       "11:00", "11:15", "11:30", "11:45",
+       "12:00", "12:15", "12:30", "12:45",
+       "13:00", "13:15", "13:30", "13:45",
+       "14:00", "14:15", "14:30", "14:45",
+       "15:00", "15:15", "15:30", "15:45",
+       "16:00", "16:15", "16:30", "16:45",
+       "17:00", "17:15", "17:30", "17:45",
+       "18:00", "18:15", "18:30", "18:45",
+       "19:00", "19:15", "19:30", "19:45",
+       "20:00", "20:15", "20:30", "20:45",
+       "21:00", "21:15", "21:30", "21:45",
+       "22:00", "22:15", "22:30", "22:45",
+       "23:00", "23:15", "23:30", "23:45",
+      ]
+    initial_option: "20:00"
+    optimistic: true
+    restore_value: true
+  - platform: template
+    name: "Zone 2 start"
+    id: zone2_start
+    options: *start_options
+    initial_option: "18:00"
+    optimistic: true
+    restore_value: true
+  - platform: template
+    name: "Zone 3 start"
+    id: zone3_start
+    options: *start_options
+    initial_option: "20:30"
+    optimistic: true
+    restore_value: true
+  - platform: template
+    name: "Zone 4 start"
+    id: zone4_start
+    options: *start_options
+    initial_option: "19:30"
+    optimistic: true
+    restore_value: true
+  - platform: template
+    name: "Zone 5 start"
+    id: zone5_start
+    options: *start_options
+    initial_option: "18:45"
+    optimistic: true
+    restore_value: true
+  - platform: template
+    name: "Zone 6 start"
+    id: zone6_start
+    options: *start_options
+    initial_option: "17:15"
+    optimistic: true
+    restore_value: true
 
 
 number:
@@ -295,61 +333,6 @@ sensor:
     accuracy_decimals: 0
     unit_of_measurement: min
     lambda: "return id(var_zone_remainings)[5];"
-
-
-
-text_sensor:
-  #
-  # Template Text Sensors
-  #
-  - platform: template
-    name: "Zone 1 start"
-    id: zone1_start
-    lambda: |-
-      char buf[9];
-      sprintf(buf, "%02d:%02d:00", id(var_zone_start_hours)[0], id(var_zone_start_minutes)[0]);
-      std::string bufstdstr = buf;
-      return bufstdstr;
-  - platform: template
-    name: "Zone 2 start"
-    id: zone2_start
-    lambda: |-
-      char buf[9];
-      sprintf(buf, "%02d:%02d:00", id(var_zone_start_hours)[1], id(var_zone_start_minutes)[1]);
-      std::string bufstdstr = buf;
-      return bufstdstr;
-  - platform: template
-    name: "Zone 3 start"
-    id: zone3_start
-    lambda: |-
-      char buf[9];
-      sprintf(buf, "%02d:%02d:00", id(var_zone_start_hours)[2], id(var_zone_start_minutes)[2]);
-      std::string bufstdstr = buf;
-      return bufstdstr;
-  - platform: template
-    name: "Zone 4 start"
-    id: zone4_start
-    lambda: |-
-      char buf[9];
-      sprintf(buf, "%02d:%02d:00", id(var_zone_start_hours)[3], id(var_zone_start_minutes)[3]);
-      std::string bufstdstr = buf;
-      return bufstdstr;
-  - platform: template
-    name: "Zone 5 start"
-    id: zone5_start
-    lambda: |-
-      char buf[9];
-      sprintf(buf, "%02d:%02d:00", id(var_zone_start_hours)[4], id(var_zone_start_minutes)[4]);
-      std::string bufstdstr = buf;
-      return bufstdstr;
-  - platform: template
-    name: "Zone 6 start"
-    id: zone6_start
-    lambda: |-
-      char buf[9];
-      sprintf(buf, "%02d:%02d:00", id(var_zone_start_hours)[5], id(var_zone_start_minutes)[5]);
-      std::string bufstdstr = buf;
-      return bufstdstr;
 
 
 switch:
@@ -713,31 +696,25 @@ interval:
           // time based
           if (id(zone1_enabled).state &&
             !id(irrigation_zone1).state &&
-            id(hass_time).now().hour == id(var_zone_start_hours)[0] &&
-            id(hass_time).now().minute == id(var_zone_start_minutes)[0])
+            id(hass_time).now().strftime("%H:%M") == id(zone1_start).state)
               id(irrigation_zone1).turn_on();
           if (id(zone2_enabled).state &&
             !id(irrigation_zone2).state &&
-            id(hass_time).now().hour == id(var_zone_start_hours)[1] &&
-            id(hass_time).now().minute == id(var_zone_start_minutes)[1])
+            id(hass_time).now().strftime("%H:%M") == id(zone2_start).state)
               id(irrigation_zone2).turn_on();
           if (id(zone3_enabled).state &&
             !id(irrigation_zone3).state &&
-            id(hass_time).now().hour == id(var_zone_start_hours)[2] &&
-            id(hass_time).now().minute == id(var_zone_start_minutes)[2])
+            id(hass_time).now().strftime("%H:%M") == id(zone3_start).state)
               id(irrigation_zone3).turn_on();
           if (id(zone4_enabled).state &&
             !id(irrigation_zone4).state &&
-            id(hass_time).now().hour == id(var_zone_start_hours)[3] &&
-            id(hass_time).now().minute == id(var_zone_start_minutes)[3])
+            id(hass_time).now().strftime("%H:%M") == id(zone4_start).state)
               id(irrigation_zone4).turn_on();
           if (id(zone5_enabled).state &&
             !id(irrigation_zone5).state &&
-            id(hass_time).now().hour == id(var_zone_start_hours)[4] &&
-            id(hass_time).now().minute == id(var_zone_start_minutes)[4])
+            id(hass_time).now().strftime("%H:%M") == id(zone5_start).state)
               id(irrigation_zone5).turn_on();
           if (id(zone6_enabled).state &&
             !id(irrigation_zone6).state &&
-            id(hass_time).now().hour == id(var_zone_start_hours)[5] &&
-            id(hass_time).now().minute == id(var_zone_start_minutes)[5])
+            id(hass_time).now().strftime("%H:%M") == id(zone6_start).state)
               id(irrigation_zone6).turn_on();

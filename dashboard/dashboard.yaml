@@ -75,7 +75,7 @@ views:
             toggle: true
             state_color: true
             entities:
-              - entity: input_datetime.zone1_start
+              - entity: select.zone_1_start
                 name: start
               - entity: number.zone_1_duration
                 name: duration
@@ -85,7 +85,7 @@ views:
             toggle: true
             state_color: true
             entities:
-              - entity: input_datetime.zone2_start
+              - entity: select.zone_2_start
                 name: start
               - entity: number.zone_2_duration
                 name: duration
@@ -95,7 +95,7 @@ views:
             toggle: true
             state_color: true
             entities:
-              - entity: input_datetime.zone3_start
+              - entity: select.zone_3_start
                 name: start
               - entity: number.zone_3_duration
                 name: duration
@@ -105,7 +105,7 @@ views:
             toggle: true
             state_color: true
             entities:
-              - entity: input_datetime.zone4_start
+              - entity: select.zone_4_start
                 name: start
               - entity: number.zone_4_duration
                 name: duration
@@ -115,7 +115,7 @@ views:
             toggle: true
             state_color: true
             entities:
-              - entity: input_datetime.zone5_start
+              - entity: select.zone_5_start
                 name: start
               - entity: number.zone_5_duration
                 name: duration
@@ -125,7 +125,7 @@ views:
             toggle: true
             state_color: true
             entities:
-              - entity: input_datetime.zone6_start
+              - entity: select.zone_6_start
                 name: start
               - entity: number.zone_6_duration
                 name: duration

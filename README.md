@@ -15,18 +15,6 @@ This package includes three directories:
 
     Make adjustments for your ESP device and Wifi and program your ESP device.
 
-- **./config**
-
-    These are the Home Assistant configuration files which include some helper entities and automations for the frontend.
-    Copy everything to ```/packages/irrigation/config``` within your Home Assistant configuration folder.
-    
-    Add the following snippet to your ```configuration.yaml```:
-    ```yaml
-    homeassistant:
-      packages:
-        irrigation: !include_dir_merge_named packages/irrigation/config/
-    ```
-
 - **./dashboard**
 
     This folder contains an example for a lovelace dashboard shown in the picture above.
