@@ -7,6 +7,9 @@ esp32:
     type: esp-idf
     version: recommended
 
+preferences:
+  flash_write_interval: 1min
+
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
@@ -32,28 +35,23 @@ globals:
   - id: var_pump_remaining
     type: int
     initial_value: "0"
-  - id: var_zone_durations
-    type: int[6]
-    restore_value: yes
-    initial_value: "{30, 45, 30, 30, 45, 45}"
   - id: var_zone_remainings
     type: int[6]
     initial_value: "{0, 0, 0, 0, 0, 0}"
-  - id: var_time_multiplier
-    type: int
-    initial_value: "100"
-  - id: var_skip_days
-    type: int
-    initial_value: "0"
-    restore_value: yes
   - id: var_skip_start_day
     type: int
-    restore_value: yes
+    restore_value: true
     initial_value: "0"
 
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
+
+
+button:
+  - platform: restart
+    id: irrigation_restart
+    name: "Irrigation Restart"
 
 
 binary_sensor:
@@ -159,96 +157,60 @@ number:
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 30
     unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[0];"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_zone_durations)[0] = x;
-            id(zone1_duration).update();
-        - logger.log:
-            format: "Duration set to zone 1: %f."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
   - platform: template
     id: zone2_duration
     name: "Zone 2 duration"
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 45
     unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[1];"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_zone_durations)[1] = x;
-            id(zone2_duration).update();
-        - logger.log:
-            format: "Duration set to zone 2: %f."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
   - platform: template
     id: zone3_duration
     name: "Zone 3 duration"
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 30
     unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[2];"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_zone_durations)[2] = x;
-            id(zone3_duration).update();
-        - logger.log:
-            format: "Duration set to zone 3: %f."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
   - platform: template
     id: zone4_duration
     name: "Zone 4 duration"
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 30
     unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[3];"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_zone_durations)[3] = x;
-            id(zone4_duration).update();
-        - logger.log:
-            format: "Duration set to zone 4: %f."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
   - platform: template
     id: zone5_duration
     name: "Zone 5 duration"
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 30
     unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[4];"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_zone_durations)[4] = x;
-            id(zone5_duration).update();
-        - logger.log:
-            format: "Duration set to zone 5: %f."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
   - platform: template
     id: zone6_duration
     name: "Zone 6 duration"
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 45
     unit_of_measurement: min
-    lambda: "return id(var_zone_durations)[5];"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_zone_durations)[5] = x;
-            id(zone6_duration).update();
-        - logger.log:
-            format: "Duration set to zone 6: %f."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
 
   - platform: template
     id: time_multiplier
@@ -256,15 +218,11 @@ number:
     step: 1
     min_value: 0
     max_value: 120
+    initial_value: 100
     unit_of_measurement: "%"
-    lambda: "return id(var_time_multiplier);"
-    set_action:
-      then:
-        - lambda: |-
-            id(var_time_multiplier) = x;
-        - logger.log:
-            format: "Irrigation time set to %f percent."
-            args: [ x ]
+    optimistic: true
+    restore_value: true
+
 
   - platform: template
     id: skip_days
@@ -272,16 +230,13 @@ number:
     step: 1
     min_value: 0
     max_value: 10
-    lambda: "return id(var_skip_days);"
+    initial_value: 0
+    optimistic: true
+    restore_value: true
     set_action:
       then:
         - lambda: |-
-            id(var_skip_days) = x;
             id(var_skip_start_day) = id(hass_time).now().timestamp / 86400;
-        - logger.log:
-            format: "Skip days set to %f."
-            args: [ x ]
-
 
 sensor:
   - platform: wifi_signal
@@ -474,38 +429,38 @@ switch:
     name: "Zone 1 enabled"
     id: zone1_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
   - platform: template
     name: "Zone 2 enabled"
     id: zone2_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
   - platform: template
     name: "Zone 3 enabled"
     id: zone3_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
   - platform: template
     name: "Zone 4 enabled"
     id: zone4_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
   - platform: template
     name: "Zone 5 enabled"
     id: zone5_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
   - platform: template
     name: "Zone 6 enabled"
     id: zone6_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
 
   - platform: template
     name: "Automation enabled"
     id: automation_enabled
     optimistic: true
-    restore_state: yes
+    restore_state: true
 
   #
   # GPIO Switches
@@ -603,7 +558,7 @@ script:
   - id: zone1_wait
     then:
       - lambda: |-
-          id(var_zone_remainings)[0] = id(var_zone_durations)[0]  * id(var_time_multiplier) / 100;
+          id(var_zone_remainings)[0] = id(zone1_duration).state  * id(time_multiplier).state / 100;
           id(zone1_remaining).update();
       - while:
           condition:
@@ -616,7 +571,7 @@ script:
   - id: zone2_wait
     then:
       - lambda: |-
-          id(var_zone_remainings)[1] = id(var_zone_durations)[1]  * id(var_time_multiplier) / 100;
+          id(var_zone_remainings)[1] = id(zone2_duration).state  * id(time_multiplier).state / 100;
           id(zone2_remaining).update();
       - while:
           condition:
@@ -629,7 +584,7 @@ script:
   - id: zone3_wait
     then:
       - lambda: |-
-          id(var_zone_remainings)[2] = id(var_zone_durations)[2]  * id(var_time_multiplier) / 100;
+          id(var_zone_remainings)[2] = id(zone3_duration).state  * id(time_multiplier).state / 100;
           id(zone3_remaining).update();
       - while:
           condition:
@@ -642,7 +597,7 @@ script:
   - id: zone4_wait
     then:
       - lambda: |-
-          id(var_zone_remainings)[3] = id(var_zone_durations)[3]  * id(var_time_multiplier) / 100;
+          id(var_zone_remainings)[3] = id(zone4_duration).state  * id(time_multiplier).state / 100;
           id(zone4_remaining).update();
       - while:
           condition:
@@ -655,7 +610,7 @@ script:
   - id: zone5_wait
     then:
       - lambda: |-
-          id(var_zone_remainings)[4] = id(var_zone_durations)[4]  * id(var_time_multiplier) / 100;
+          id(var_zone_remainings)[4] = id(zone5_duration).state  * id(time_multiplier).state / 100;
           id(zone5_remaining).update();
       - while:
           condition:
@@ -668,7 +623,7 @@ script:
   - id: zone6_wait
     then:
       - lambda: |-
-          id(var_zone_remainings)[5] = id(var_zone_durations)[5]  * id(var_time_multiplier) / 100;
+          id(var_zone_remainings)[5] = id(zone6_duration).state  * id(time_multiplier).state / 100;
           id(zone6_remaining).update();
       - while:
           condition:
@@ -691,7 +646,7 @@ interval:
 
           // skip days
           int current_day = id(hass_time).now().timestamp / 86400;
-          if ((current_day - id(var_skip_start_day)) % (id(var_skip_days) + 1) != 0) return;
+          if ((current_day - id(var_skip_start_day)) % ((int)id(skip_days).state + 1) != 0) return;
 
           // time based
           if (id(zone1_enabled).state &&
