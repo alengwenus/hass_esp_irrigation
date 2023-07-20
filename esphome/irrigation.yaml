@@ -429,38 +429,38 @@ switch:
     name: "Zone 1 enabled"
     id: zone1_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: template
     name: "Zone 2 enabled"
     id: zone2_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: template
     name: "Zone 3 enabled"
     id: zone3_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: template
     name: "Zone 4 enabled"
     id: zone4_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: template
     name: "Zone 5 enabled"
     id: zone5_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
   - platform: template
     name: "Zone 6 enabled"
     id: zone6_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: template
     name: "Automation enabled"
     id: automation_enabled
     optimistic: true
-    restore_state: true
+    restore_mode: RESTORE_DEFAULT_OFF
 
   #
   # GPIO Switches
